@@ -1,0 +1,37 @@
+version: '3'
+services:
+  openldap:
+    build: openldap
+    container_name: ${LDAP_CONTAINER_NAME}
+    hostname: ${LDAP_DOMAIN}
+    domainname: ${LDAP_DOMAIN}
+    restart: always
+    volumes:
+      - '${LDAP_DATA_PATH}/data:/var/lib/ldap'
+      - '${LDAP_DATA_PATH}/config:/etc/ldap/slapd.d'
+    environment:
+      VIRTUAL_HOST: ${LDAP_DOMAIN}
+      LETSENCRYPT_HOST: ${LDAP_DOMAIN}
+      LETSENCRYPT_EMAIL: ${LETSENCRYPT_EMAIL} 
+      LDAP_ADMIN_PASSWORD: ${LDAP_ADMIN_PASSWORD}
+      LDAP_BASE_DN: ${LDAP_BASE_DN}
+    ports:
+      - "389:389"
+      - "636:636"
+
+  ldapadmin:
+    image: osixia/phpldapadmin
+    container_name: ${ADMIN_CONTAINER_NAME}
+    environment:
+      VIRTUAL_HOST: ${ADMIN_DOMAIN}
+      PHPLDAPADMIN_LDAP_HOSTS: ${LDAP_CONTAINER_NAME}
+      PHPLDAPADMIN_HTTPS: 'false'
+      LETSENCRYPT_HOST: ${ADMIN_DOMAIN}
+      LETSENCRYPT_EMAIL: ${LETSENCRYPT_EMAIL} 
+    depends_on:
+      - openldap
+
+networks:
+  default:
+    external:
+      name: ${NETWORK}
